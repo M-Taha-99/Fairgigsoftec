@@ -28,6 +28,7 @@ const mockPlatformData = [
 export default function WorkerDashboard() {
   const { user } = useContext(AuthContext);
   const [data, setData] = useState([]);
+  const [earningsData, setEarningsData] = useState([]);
   const [stats, setStats] = useState({ totalNet: 0, hourlyRate: 0, totalHours: 0, cityMedian: 460 });
   const [platformStats, setPlatformStats] = useState([]);
   const [anomaly, setAnomaly] = useState(null);
@@ -36,13 +37,14 @@ export default function WorkerDashboard() {
     async function loadData() {
       if (!user) return;
 
-      const { data: earnings } = await supabase
+        const { data: earnings } = await supabase
         .from('earnings')
         .select('*')
         .eq('worker_id', user.id)
-        .order('shift_date', { ascending: true });
+        .order('shift_date', { ascending: false });
 
       if (earnings && earnings.length > 0) {
+        setEarningsData(earnings);
         let totalNet = 0;
         let totalHours = 0;
         const chartData = [];
@@ -246,33 +248,64 @@ export default function WorkerDashboard() {
 
       <div className="grid-bottom-row" style={{ gridTemplateColumns: '1.5fr 1fr' }}>
         <div className="chart-box">
-            <h3 className="chart-title">Hours vs Earnings Performance</h3>
-            <div className="chart-container">
-                <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={data}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                        <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10, fill: '#64748b'}} />
-                        <YAxis yAxisId="left" stroke="#6870fa" tick={{fontSize: 10, fill: '#6870fa'}} />
-                        <YAxis yAxisId="right" orientation="right" stroke="#3da58a" tick={{fontSize: 10, fill: '#3da58a'}} />
-                        <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px' }} />
-                        <Bar yAxisId="left" dataKey="hours" fill="var(--accent-blue)" radius={[4, 4, 0, 0]} />
-                        <Bar yAxisId="right" dataKey="earnings" fill="var(--accent-teal)" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                </ResponsiveContainer>
+            <h3 className="chart-title">Earnings Performance History</h3>
+            <div className="data-table-container" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                <table className="data-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Platform</th>
+                            <th>Hours</th>
+                            <th>Gross</th>
+                            <th>Fee</th>
+                            <th>Net</th>
+                            <th>Status</th>
+                            <th>Verifier's Comment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {earningsData.map(e => (
+                            <tr key={e.id}>
+                                <td style={{ fontSize: '0.8rem' }}>{new Date(e.shift_date).toLocaleDateString()}</td>
+                                <td><span className="badge badge-neutral" style={{ fontSize: '0.65rem' }}>{e.platform}</span></td>
+                                <td>{e.hours_worked}</td>
+                                <td>Rs. {e.gross_earned}</td>
+                                <td>Rs. {e.platform_deductions}</td>
+                                <td style={{ fontWeight: '700', color: 'var(--accent-teal)' }}>Rs. {e.net_received}</td>
+                                <td>
+                                    <span className={`badge ${e.status === 'verified' ? 'badge-success' : e.status === 'pending' ? 'badge-warning' : 'badge-danger'}`} style={{ fontSize: '0.6rem' }}>
+                                        {e.status}
+                                    </span>
+                                </td>
+                                <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={e.verifier_note}>
+                                    {e.verifier_note || '-'}
+                                </td>
+                            </tr>
+                        ))}
+                        {earningsData.length === 0 && (
+                            <tr>
+                                <td colSpan="7" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>No shifts logged yet. Click 'Log New Shift' to begin.</td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
             </div>
         </div>
 
         <div className="chart-box">
-            <h3 className="chart-title">Quick Actions</h3>
+            <h3 className="chart-title">Quick Actions & Support</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <button className="btn-download" style={{ width: '100%', justifyContent: 'center' }} onClick={() => window.location.href='/worker/log'}>
+                <button className="btn-download" style={{ width: '100%', justifyContent: 'center', background: 'var(--accent-teal)' }} onClick={() => window.location.href='/worker/log'}>
                     Log New Shift
                 </button>
-                <button className="btn-download" style={{ width: '100%', justifyContent: 'center', background: 'transparent', border: '1px solid var(--accent-blue)' }} onClick={() => alert('Opening Support...')}>
-                    Contact Advocate
+                <button className="btn-download" style={{ width: '100%', justifyContent: 'center', background: 'transparent', border: '1px solid var(--accent-blue)', color: 'var(--accent-blue)' }} onClick={() => window.location.href='/worker/grievances'}>
+                    Report Issue / Grievance
                 </button>
-                <div style={{ marginTop: '1rem', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '4px' }}>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Did you know? Logging screenshots helps AI detect platform errors 30% faster.</p>
+                <button className="btn-download" style={{ width: '100%', justifyContent: 'center', background: 'transparent', border: '1px solid var(--accent-blue)', color: 'var(--accent-blue)' }} onClick={() => window.location.href='/worker/bulletin'}>
+                    Community Board
+                </button>
+                <div style={{ marginTop: '1rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>💡 Tip: Logging screenshots helps AI detect platform errors 30% faster.</p>
                 </div>
             </div>
         </div>

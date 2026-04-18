@@ -2,263 +2,233 @@ import React, { useEffect, useState, useContext } from 'react';
 import { supabase } from '../lib/supabase';
 import { AuthContext } from '../context/AuthContext';
 import { 
-    CheckCircle, XCircle, Search, UserCheck, AlertCircle, Clock, 
-    BarChart, ZoomIn, FileText, Activity, X 
+    ShieldCheck, Clock, AlertTriangle, CheckCircle, 
+    ArrowRight, BarChart2, Activity, TrendingUp, Download
 } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import axios from 'axios';
+import { 
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
+    PieChart, Pie
+} from 'recharts';
+import { useNavigate } from 'react-router-dom';
 
 const PIE_COLORS = ['#3da58a', '#f59e0b', '#ef4444'];
 
+const STATUS_COLORS = {
+    verified: 'var(--accent-teal)',
+    disputed: '#f59e0b',
+    unverifiable: '#ef4444'
+};
+
 export default function VerifierDashboard() {
   const { user } = useContext(AuthContext);
-  const [pending, setPending] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ verified: 0, disputed: 0, pending: 0 });
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [verifierNote, setVerifierNote] = useState('');
-  const [workerHistory, setWorkerHistory] = useState([]);
-  const [anomalyResult, setAnomalyResult] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const navigate = useNavigate();
+  const [stats, setStats] = useState({ pending: 0, verified: 0, disputed: 0, unverifiable: 0 });
+  const [recentAudits, setRecentAudits] = useState([]);
+  const [chartData, setChartData] = useState([]);
+  const [workerMap, setWorkerMap] = useState({});
 
   useEffect(() => {
-    fetchData();
+    fetchStats();
   }, []);
 
-  async function fetchData() {
-    const { data: allEarnings } = await supabase.from('earnings').select('status');
-    
-    const counts = { verified: 0, disputed: 0, pending: 0 };
-    if (allEarnings && allEarnings.length > 0) {
-      allEarnings.forEach(e => {
-          if (e.status === 'verified') counts.verified++;
-          else if (e.status === 'disputed' || e.status === 'unverifiable') counts.disputed++;
-          else counts.pending++;
-      });
+  async function fetchStats() {
+    try {
+        // 1. Fetch earnings
+        const { data: allEarnings, error } = await supabase
+            .from('earnings')
+            .select('*');
+
+        // 2. Fetch users to map IDs to emails (Safe alternative to joins)
+        const { data: userData } = await supabase
+            .from('users')
+            .select('id, email');
+
+        if (userData) {
+            const map = {};
+            userData.forEach(u => map[u.id] = u.email);
+            setWorkerMap(map);
+        }
+
+        if (error) {
+            console.error("Fetch Error:", error.message);
+            return;
+        }
+
+        if (allEarnings) {
+            const pending = allEarnings.filter(e => e.status === 'pending').length;
+            const verified = allEarnings.filter(e => e.status === 'verified').length;
+            const disputed = allEarnings.filter(e => e.status === 'disputed').length;
+            const unverifiable = allEarnings.filter(e => e.status === 'unverifiable').length;
+
+            setStats({ pending, verified, disputed, unverifiable });
+
+            setChartData([
+                { name: 'Verified', value: verified },
+                { name: 'Disputed', value: disputed },
+                { name: 'Unverifiable', value: unverifiable }
+            ]);
+
+            // For history, we'll map the IDs for now
+            const sorted = allEarnings
+                .filter(e => e.status !== 'pending' && e.verifier_id === user.id)
+                .sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+            setRecentAudits(sorted);
+        }
+    } catch (err) {
+        console.error("Dashboard Load Error:", err);
     }
-    setStats(counts);
-
-    const { data: pendingData } = await supabase
-      .from('earnings')
-      .select(`
-        id, worker_id, platform, shift_date, gross_earned, net_received, screenshot_url, evidence_url, status,
-        users ( email )
-      `)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false });
-
-    if (pendingData) setPending(pendingData);
-    setLoading(false);
   }
 
-  const handleAction = async (id, status) => {
-    await supabase.from('earnings').update({ status, verifier_note: verifierNote }).eq('id', id);
-    setPending(pending.filter(item => item.id !== id));
-    setStats(prev => ({
-        ...prev,
-        pending: prev.pending - 1,
-        [status === 'disputed' || status === 'unverifiable' ? 'disputed' : status]: prev[status === 'disputed' || status === 'unverifiable' ? 'disputed' : status] + 1
-    }));
-    setSelectedItem(null);
-    setVerifierNote('');
-  };
+  const downloadAuditReport = () => {
+    // Export all audited items (anything not pending)
+    const reportData = [
+        ['Date', 'Worker', 'Platform', 'Amount', 'Status', 'Verifier Note'],
+        ...recentAudits.map(a => [
+            new Date(a.updated_at).toLocaleDateString(),
+            a.users?.email,
+            a.platform,
+            a.net_received,
+            a.status,
+            a.verifier_note || ''
+        ])
+    ];
 
-  const inspectWorker = async (workerId) => {
-    const { data } = await supabase.from('earnings').select('*').eq('worker_id', workerId).order('shift_date', { ascending: false });
-    setWorkerHistory(data || []);
-    
-    // Run anomaly check
-    try {
-        const res = await axios.get(`http://localhost:8000/api/anomaly/check/${workerId}`);
-        setAnomalyResult(res.data);
-    } catch (err) {
-        setAnomalyResult({ error: "Service unavailable" });
-    }
+    let csvContent = "data:text/csv;charset=utf-8," + reportData.map(e => e.join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `audit_report_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
   };
-
-  const openInspector = (item) => {
-    setSelectedItem(item);
-    inspectWorker(item.worker_id);
-    setShowModal(true);
-  };
-
-  const pieData = [
-    { name: 'Verified', value: stats.verified },
-    { name: 'Pending', value: stats.pending },
-    { name: 'Disputed', value: stats.disputed }
-  ];
 
   return (
     <div className="animate-fade-in">
-      <div className="dashboard-header">
+      <header className="dashboard-header">
         <div>
-          <h1 className="header-title">Verifier Dashboard</h1>
-          <p className="header-subtitle">Quality assurance & evidence verification queue</p>
+          <h1 className="header-title">Verifier Overview</h1>
+          <p className="header-subtitle">Monitoring digital labor integrity and trust protocols.</p>
         </div>
-      </div>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+            <button className="btn-download" onClick={downloadAuditReport} style={{ background: 'white', border: '1px solid #ddd', color: 'var(--text-primary)' }}>
+                <Download size={16} /> Download Audit Report
+            </button>
+            <button className="auth-btn" onClick={() => navigate('/verifier/queue')} style={{ width: 'auto', padding: '0.8rem 1.5rem' }}>
+                <Activity size={18} /> Open Verification Queue
+            </button>
+        </div>
+      </header>
 
       <div className="grid-top-row">
         <div className="stat-box">
             <div className="stat-left">
-                <Clock color="var(--accent-teal)" size={24} />
+                <Clock color="var(--accent-blue)" size={24} />
                 <span className="stat-value">{stats.pending}</span>
-                <span className="stat-label">Pending</span>
+                <span className="stat-label">Pending Review</span>
             </div>
         </div>
         <div className="stat-box">
             <div className="stat-left">
-                <UserCheck color="var(--accent-teal)" size={24} />
+                <CheckCircle color="var(--accent-green)" size={24} />
                 <span className="stat-value">{stats.verified}</span>
-                <span className="stat-label">Verified</span>
+                <span className="stat-label">Total Verified</span>
             </div>
         </div>
         <div className="stat-box">
             <div className="stat-left">
-                <AlertCircle color="#ef4444" size={24} />
+                <AlertTriangle color="#f59e0b" size={24} />
                 <span className="stat-value">{stats.disputed}</span>
-                <span className="stat-label">Disputed</span>
-            </div>
-        </div>
-        <div className="stat-box">
-            <div className="stat-left">
-                <BarChart color="var(--accent-teal)" size={24} />
-                <span className="stat-value">{(stats.verified + stats.disputed + stats.pending)}</span>
-                <span className="stat-label">Total Load</span>
+                <span className="stat-label">Flagged Issues</span>
             </div>
         </div>
       </div>
 
-      <div className="grid-middle-row" style={{ gridTemplateColumns: '1fr 2fr' }}>
+      <div className="grid-middle-row" style={{ gridTemplateColumns: '1.5fr 1fr' }}>
         <div className="chart-box">
-            <h3 className="chart-title">Status Distribution</h3>
-            <div style={{ height: '250px' }}>
+            <h3 className="chart-title">System-wide Verification Integrity</h3>
+            <div className="chart-container">
                 <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                        <Pie data={pieData} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
-                            {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={PIE_COLORS[index]} />)}
-                        </Pie>
-                        <Tooltip contentStyle={{ background: '#ffffff', borderRadius: '8px' }} />
-                    </PieChart>
+                    <BarChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                        <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 12}} />
+                        <YAxis stroke="#64748b" tick={{fontSize: 12}} />
+                        <Tooltip contentStyle={{ background: 'white', borderRadius: '8px' }} />
+                        <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                            {chartData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.name.toLowerCase()]} />
+                            ))}
+                        </Bar>
+                    </BarChart>
                 </ResponsiveContainer>
             </div>
         </div>
 
-        <div className="chart-box" style={{ overflowY: 'auto', maxHeight: '500px' }}>
-            <h3 className="chart-title" style={{ marginBottom: '1.5rem' }}>Pending Verification Queue</h3>
-            {loading ? <p>Loading...</p> : pending.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-                    <CheckCircle size={32} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
-                    <p>Queue empty!</p>
-                </div>
-            ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {pending.map(item => (
-                        <div key={item.id} className="stat-box" style={{ padding: '1rem', border: '1px solid #e2e8f0' }}>
-                            <div style={{ flex: 1 }}>
-                                <div style={{ fontWeight: 'bold' }}>{item.users?.email}</div>
-                                <div style={{ fontSize: '0.8rem', color: 'var(--accent-teal)' }}>{item.platform} • {item.shift_date}</div>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Rs. {item.net_received}</div>
-                                <button onClick={() => openInspector(item)} className="nav-link" style={{ padding: '0.2rem 0', color: 'var(--accent-blue)', fontSize: '0.75rem' }}>
-                                    <ZoomIn size={14} /> Inspect Evidence
-                                </button>
-                            </div>
+        <div className="chart-box">
+            <h3 className="chart-title">Status Distribution</h3>
+            <div className="chart-container" style={{ height: '300px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                        <Pie
+                            data={chartData}
+                            innerRadius={60}
+                            outerRadius={80}
+                            paddingAngle={5}
+                            dataKey="value"
+                        >
+                            {chartData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                            ))}
+                        </Pie>
+                        <Tooltip contentStyle={{ background: 'white', borderRadius: '8px' }} />
+                    </PieChart>
+                </ResponsiveContainer>
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: '1rem' }}>
+                    {chartData.map((d, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem' }}>
+                            <div style={{ width: '8px', height: '8px', background: PIE_COLORS[i % PIE_COLORS.length], borderRadius: '50%' }}></div>
+                            <span>{d.name}: {d.value}</span>
                         </div>
                     ))}
                 </div>
-            )}
+            </div>
         </div>
       </div>
 
-      {showModal && selectedItem && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', padding: '2rem' }}>
-            <div style={{ background: 'white', flex: 1, borderRadius: '12px', overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-                <button onClick={() => setShowModal(false)} style={{ position: 'absolute', right: '1rem', top: '1rem', background: 'none', border: 'none', cursor: 'pointer', zIndex: 10 }}>
-                    <X size={24} />
-                </button>
-                
-                <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-                    {/* Left: Evidence & Notes */}
-                    <div style={{ flex: 1, borderRight: '1px solid #eee', display: 'flex', flexDirection: 'column', padding: '2rem' }}>
-                        <h2 style={{ marginBottom: '1rem' }}>Shift Evidence Check</h2>
-                        <div style={{ flex: 1, background: '#f8fafc', borderRadius: '8px', overflow: 'auto', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '1rem' }}>
-                            {selectedItem.evidence_url ? (
-                                selectedItem.evidence_url.includes('csv') ? (
-                                    <div style={{ textAlign: 'center' }}>
-                                        <FileText size={48} color="var(--accent-blue)" style={{ marginBottom: '1rem' }} />
-                                        <p style={{ fontSize: '0.8rem' }}>CSV Proof Attached</p>
-                                        <a href={selectedItem.evidence_url} target="_blank" rel="noreferrer" className="nav-link" style={{ color: 'var(--accent-blue)', textDecoration: 'underline' }}>
-                                            Download Evidence File
-                                        </a>
-                                    </div>
-                                ) : (
-                                    <img src={selectedItem.evidence_url} alt="Proof" style={{ maxWidth: '100%', maxHeight: '100%', cursor: 'zoom-in' }} />
-                                )
-                            ) : selectedItem.screenshot_url ? (
-                                <img src={selectedItem.screenshot_url} alt="Proof" style={{ maxWidth: '100%', maxHeight: '100%', cursor: 'zoom-in' }} />
-                            ) : (
-                                <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No digital evidence uploaded</div>
-                            )}
-                        </div>
-                        <div style={{ marginTop: '1.5rem' }}>
-                            <label style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>Verifier Notes (Sent to worker if flagged)</label>
-                            <textarea 
-                                className="auth-input" 
-                                style={{ marginTop: '0.5rem', height: '80px', resize: 'none' }}
-                                placeholder="Explain any discrepancies found..."
-                                value={verifierNote}
-                                onChange={(e) => setVerifierNote(e.target.value)}
-                            />
-                            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                                <button onClick={() => handleAction(selectedItem.id, 'verified')} className="auth-btn" style={{ background: 'var(--accent-teal)' }}>Verify Shift</button>
-                                <button onClick={() => handleAction(selectedItem.id, 'disputed')} className="auth-btn" style={{ background: '#ef4444' }}>Flag Discrepancy</button>
-                                <button onClick={() => handleAction(selectedItem.id, 'unverifiable')} className="auth-btn" style={{ background: '#64748b' }}>Unverifiable</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Right: Patterns & Anomaly */}
-                    <div style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>
-                        <h3>Worker Patterns</h3>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Review past shifts to spot unusual reporting behavior.</p>
-                        
-                        {anomalyResult && !anomalyResult.error && (
-                            <div style={{ background: 'rgba(104, 112, 250, 0.1)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--accent-blue)', marginBottom: '1.5rem' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-blue)', fontWeight: 'bold', fontSize: '0.9rem' }}>
-                                    <Activity size={16} /> AI Anomaly Result
-                                </div>
-                                <p style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>{anomalyResult.message}</p>
-                            </div>
-                        )}
-
-                        <div className="data-table-container">
-                            <table className="data-table" style={{ fontSize: '0.8rem' }}>
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Platform</th>
-                                        <th>Amount</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {workerHistory.map(h => (
-                                        <tr key={h.id}>
-                                            <td>{h.shift_date}</td>
-                                            <td>{h.platform}</td>
-                                            <td>Rs. {h.net_received}</td>
-                                            <td><span className={`badge ${h.status === 'verified' ? 'badge-success' : 'badge-neutral'}`}>{h.status}</span></td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+      <div className="grid-bottom-row" style={{ gridTemplateColumns: '1fr' }}>
+        <div className="chart-box">
+            <h3 className="chart-title">Your Personal Audit History</h3>
+            <div className="data-table-container">
+                <table className="data-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Worker</th>
+                            <th>Platform</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Verifier Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {recentAudits.map(audit => (
+                            <tr key={audit.id}>
+                                <td style={{ fontSize: '0.75rem' }}>{audit.shift_date || new Date(audit.created_at).toLocaleDateString()}</td>
+                                <td style={{ fontWeight: '600' }}>{workerMap[audit.worker_id] || audit.worker_id.substring(0,8)}</td>
+                                <td>{audit.platform}</td>
+                                <td>Rs. {audit.net_received}</td>
+                                <td>
+                                    <span className={`badge ${audit.status === 'verified' ? 'badge-success' : 'badge-warning'}`}>
+                                        {audit.status}
+                                    </span>
+                                </td>
+                                <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{audit.verifier_note || 'No note provided'}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

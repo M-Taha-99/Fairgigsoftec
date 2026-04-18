@@ -5,6 +5,20 @@ import { AuthContext } from '../context/AuthContext';
 
 export default function Sidebar() {
   const { user } = useContext(AuthContext);
+  const [pendingCount, setPendingCount] = React.useState(0);
+
+  React.useEffect(() => {
+    if (user?.role === 'verifier') {
+        const fetchPending = async () => {
+            const { count } = await supabase
+                .from('earnings')
+                .select('*', { count: 'exact', head: true })
+                .eq('status', 'pending');
+            setPendingCount(count || 0);
+        };
+        fetchPending();
+    }
+  }, [user]);
 
   if (!user) return null;
 
@@ -13,11 +27,11 @@ export default function Sidebar() {
       <div className="profile-section">
         <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`} alt="Avatar" className="profile-avatar" />
         <div className="profile-name">{user.email.split('@')[0]}</div>
-        <div className="profile-role">VP Fancy Admin</div>
+        <div className="profile-role" style={{ textTransform: 'capitalize' }}>FairGig {user.role}</div>
       </div>
 
       <div style={{ padding: '0 1.5rem', marginBottom: '1rem' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>ADMINIS</h2>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>FAIRGIG</h2>
       </div>
 
       <nav>
@@ -40,9 +54,12 @@ export default function Sidebar() {
             </>
         ) : user.role === 'verifier' ? (
             <>
-                <div className="nav-link" style={{ opacity: 0.6, cursor: 'default' }}>
-                    <Users size={18} /> Verification Queue
-                </div>
+                <NavLink to={`/verifier/queue`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <Shield size={18} /> Verification Queue
+                    </div>
+                    {pendingCount > 0 && <span style={{ background: '#ef4444', color: 'white', fontSize: '0.65rem', padding: '2px 6px', borderRadius: '10px', fontWeight: 'bold' }}>{pendingCount}</span>}
+                </NavLink>
                 <NavLink to={`/verifier/bulletin`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
                     <MessageSquare size={18} /> Community Bulletin
                 </NavLink>

@@ -32,7 +32,10 @@ export default function BulletinBoard() {
             content: newPost
         }]);
 
-        if (!error) {
+        if (error) {
+            console.error("Bulletin Error:", error);
+            alert(`Failed to post: ${error.message}`);
+        } else {
             setNewPost('');
             fetchPosts();
         }

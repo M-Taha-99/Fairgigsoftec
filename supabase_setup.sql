@@ -79,3 +79,6 @@ CREATE POLICY "Advocates and Admins can delete from bulletin" ON public.bulletin
   EXISTS (SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role IN ('advocate', 'admin'))
 );
 ALTER TABLE public.earnings ADD COLUMN IF NOT EXISTS evidence_url TEXT;
+-- Fix Bulletin Board Policies
+DROP POLICY IF EXISTS " Workers Verifiers Advocates can post to bulletin\ ON public.bulletin_board;
+CREATE POLICY \Authenticated users can post to bulletin\ ON public.bulletin_board FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);

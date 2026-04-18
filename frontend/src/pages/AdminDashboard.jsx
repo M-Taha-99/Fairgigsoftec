@@ -67,25 +67,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const downloadReport = () => {
-    const reportData = [
-        ['Email', 'Role', 'Total Earnings', 'Shifts Count'],
-        ...users.map(u => {
-            const userEarnings = earnings.filter(e => e.worker_id === u.id);
-            const total = userEarnings.reduce((acc, curr) => acc + parseFloat(curr.net_received), 0);
-            return [u.email, u.role, total.toFixed(2), userEarnings.length];
-        })
-    ];
-    
-    let csvContent = "data:text/csv;charset=utf-8," + reportData.map(e => e.join(",")).join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "global_system_report.csv");
-    document.body.appendChild(link);
-    link.click();
-  };
-
   // Aggregated Stats
   const totalSystemEarnings = earnings.reduce((acc, curr) => acc + parseFloat(curr.net_received), 0);
   const platformData = earnings.reduce((acc, curr) => {
@@ -109,9 +90,6 @@ export default function AdminDashboard() {
           <h1 className="header-title">Super Admin Command Center</h1>
           <p className="header-subtitle">Full system oversight, user management, and global performance tracking.</p>
         </div>
-        <button className="btn-download" onClick={downloadReport}>
-            <Download size={16} /> Export System Report (CSV)
-        </button>
       </div>
 
       {msg && <div className="chart-box" style={{ marginBottom: '1.5rem', minHeight: 'auto', borderLeft: '4px solid var(--accent-blue)', color: 'var(--accent-blue)' }}>{msg}</div>}

@@ -5,12 +5,15 @@ import Topbar from './components/Topbar';
 import WorkerDashboard from './pages/WorkerDashboard';
 import LogEarnings from './pages/LogEarnings';
 import VerifierDashboard from './pages/VerifierDashboard';
+import VerificationQueue from './pages/VerificationQueue';
 import AdvocateDashboard from './pages/AdvocateDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import GrievanceBoard from './pages/Grievance';
 import BulletinBoard from './pages/BulletinBoard';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Profile from './pages/Profile';
+import SupportFAQ from './pages/SupportFAQ';
 import Home from './pages/Home';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 
@@ -54,6 +57,8 @@ function App() {
                   <Route path="/log" element={<LogEarnings />} />
                   <Route path="/grievances" element={<GrievanceBoard />} />
                   <Route path="/bulletin" element={<BulletinBoard />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/faq" element={<SupportFAQ />} />
                 </Routes>
               </Layout>
             </ProtectedRoute>
@@ -65,7 +70,10 @@ function App() {
               <Layout>
                 <Routes>
                   <Route path="/" element={<VerifierDashboard />} />
+                  <Route path="/queue" element={<VerificationQueue />} />
                   <Route path="/bulletin" element={<BulletinBoard />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/faq" element={<SupportFAQ />} />
                 </Routes>
               </Layout>
             </ProtectedRoute>
@@ -79,6 +87,8 @@ function App() {
                   <Route path="/" element={<AdvocateDashboard />} />
                   <Route path="/grievances" element={<GrievanceBoard />} />
                   <Route path="/bulletin" element={<BulletinBoard />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/faq" element={<SupportFAQ />} />
                 </Routes>
               </Layout>
             </ProtectedRoute>
