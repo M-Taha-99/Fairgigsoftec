@@ -1,0 +1,19 @@
+{
+  "name": "fairgig-root",
+  "version": "1.0.0",
+  "description": "FairGig Monorepo Starter",
+  "scripts": {
+    "start": "npm run dev",
+    "dev": "concurrently \"npm run dev:auth\" \"npm run dev:frontend\" \"npm run dev:grievance\" \"npm run dev:earnings\" \"npm run dev:certificate\" \"npm run dev:anomaly\" \"npm run dev:analytics\"",
+    "dev:auth": "cd backend/auth-service && node index.js",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:grievance": "cd backend/grievance-service && node index.js",
+    "dev:earnings": "cd backend/earnings-service && node index.js",
+    "dev:certificate": "cd backend/certificate-service && node index.js",
+    "dev:anomaly": "cd backend/anomaly-service && uvicorn main:app --reload --port 8000",
+    "dev:analytics": "cd backend/analytics-service && uvicorn main:app --reload --port 8001"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -1,0 +1,58 @@
+import React, { useContext } from 'react';
+import { NavLink } from 'react-router-dom';
+import { Home, Users, FileText, Calendar, HelpCircle, BarChart2, PieChart, TrendingUp, Map, AlertCircle, MessageSquare } from 'lucide-react';
+import { AuthContext } from '../context/AuthContext';
+
+export default function Sidebar() {
+  const { user } = useContext(AuthContext);
+
+  if (!user) return null;
+
+  return (
+    <aside className="sidebar">
+      <div className="profile-section">
+        <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`} alt="Avatar" className="profile-avatar" />
+        <div className="profile-name">{user.email.split('@')[0]}</div>
+        <div className="profile-role">VP Fancy Admin</div>
+      </div>
+
+      <div style={{ padding: '0 1.5rem', marginBottom: '1rem' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>ADMINIS</h2>
+      </div>
+
+      <nav>
+        <NavLink to={`/${user.role}`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"} end>
+          <Home size={18} /> Dashboard
+        </NavLink>
+
+        <div className="nav-section-title">Operations</div>
+        {user.role === 'worker' ? (
+            <>
+                <NavLink to={`/worker/log`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
+                    <FileText size={18} /> Log Earnings
+                </NavLink>
+                <NavLink to={`/worker/grievances`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
+                    <MessageSquare size={18} /> Grievance Board
+                </NavLink>
+            </>
+        ) : user.role === 'verifier' ? (
+            <div className="nav-link" style={{ opacity: 0.6, cursor: 'default' }}>
+                <Users size={18} /> Verification Queue
+            </div>
+        ) : (
+            <NavLink to={`/advocate/grievances`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
+                <MessageSquare size={18} /> Manage Grievances
+            </NavLink>
+        )}
+        
+        <div className="nav-section-title">Account</div>
+        <NavLink to={`/${user.role}/profile`} className="nav-link">
+          <Users size={18} /> Profile
+        </NavLink>
+        <NavLink to={`/${user.role}/faq`} className="nav-link">
+          <HelpCircle size={18} /> Support / FAQ
+        </NavLink>
+      </nav>
+    </aside>
+  );
+}
