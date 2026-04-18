@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Users, FileText, Calendar, HelpCircle, BarChart2, PieChart, TrendingUp, Map, AlertCircle, MessageSquare } from 'lucide-react';
+import { Home, Users, FileText, Calendar, HelpCircle, BarChart2, PieChart, TrendingUp, Map, AlertCircle, MessageSquare, Shield } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 
 export default function Sidebar() {
@@ -32,17 +32,39 @@ export default function Sidebar() {
                     <FileText size={18} /> Log Earnings
                 </NavLink>
                 <NavLink to={`/worker/grievances`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
-                    <MessageSquare size={18} /> Grievance Board
+                    <AlertCircle size={18} /> Grievance Board
+                </NavLink>
+                <NavLink to={`/worker/bulletin`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
+                    <MessageSquare size={18} /> Community Bulletin
                 </NavLink>
             </>
         ) : user.role === 'verifier' ? (
-            <div className="nav-link" style={{ opacity: 0.6, cursor: 'default' }}>
-                <Users size={18} /> Verification Queue
-            </div>
+            <>
+                <div className="nav-link" style={{ opacity: 0.6, cursor: 'default' }}>
+                    <Users size={18} /> Verification Queue
+                </div>
+                <NavLink to={`/verifier/bulletin`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
+                    <MessageSquare size={18} /> Community Bulletin
+                </NavLink>
+            </>
+        ) : user.role === 'advocate' ? (
+            <>
+                <NavLink to={`/advocate/grievances`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
+                    <AlertCircle size={18} /> Manage Grievances
+                </NavLink>
+                <NavLink to={`/advocate/bulletin`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
+                    <MessageSquare size={18} /> Community Bulletin
+                </NavLink>
+            </>
         ) : (
-            <NavLink to={`/advocate/grievances`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
-                <MessageSquare size={18} /> Manage Grievances
-            </NavLink>
+            <>
+                <NavLink to={`/admin`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
+                    <Shield size={18} /> Command Center
+                </NavLink>
+                <NavLink to={`/admin/bulletin`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
+                    <MessageSquare size={18} /> Community Bulletin
+                </NavLink>
+            </>
         )}
         
         <div className="nav-section-title">Account</div>

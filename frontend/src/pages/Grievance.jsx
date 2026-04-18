@@ -16,7 +16,14 @@ export default function GrievanceBoard() {
 
   async function fetchGrievances() {
     if (!user) return;
-    const { data } = await supabase.from('grievances').select('*').order('created_at', { ascending: false });
+    let query = supabase.from('grievances').select('*').order('created_at', { ascending: false });
+    
+    // Workers only see their own
+    if (user.role === 'worker') {
+        query = query.eq('worker_id', user.id);
+    }
+
+    const { data } = await query;
     if (data) setGrievances(data);
   }
 
@@ -39,6 +46,11 @@ export default function GrievanceBoard() {
     setLoading(false);
   };
 
+  const handleStatusChange = async (id, status) => {
+    await supabase.from('grievances').update({ status }).eq('id', id);
+    fetchGrievances();
+  };
+
   return (
     <div className="animate-fade-in">
         <header className="dashboard-header">
@@ -53,40 +65,48 @@ export default function GrievanceBoard() {
         <div className="grid-middle-row" style={{ gridTemplateColumns: '1fr 1.5fr' }}>
             <div className="chart-box">
                 <h3 className="chart-title">Post a Complaint</h3>
-                <form onSubmit={handleSubmit}>
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Platform</label>
-                        <select className="auth-input" value={newComplaint.platform} onChange={e => setNewComplaint({...newComplaint, platform: e.target.value})}>
-                            <option>Uber</option>
-                            <option>FoodPanda</option>
-                            <option>InDrive</option>
-                            <option>Bykea</option>
-                        </select>
+                {user.role === 'worker' ? (
+                    <form onSubmit={handleSubmit}>
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Platform</label>
+                            <select className="auth-input" value={newComplaint.platform} onChange={e => setNewComplaint({...newComplaint, platform: e.target.value})}>
+                                <option>Uber</option>
+                                <option>FoodPanda</option>
+                                <option>InDrive</option>
+                                <option>Bykea</option>
+                            </select>
+                        </div>
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Category</label>
+                            <select className="auth-input" value={newComplaint.category} onChange={e => setNewComplaint({...newComplaint, category: e.target.value})}>
+                                <option>Payment Dispute</option>
+                                <option>Account Ban</option>
+                                <option>Unfair Deduction</option>
+                                <option>Safety Issue</option>
+                            </select>
+                        </div>
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Description</label>
+                            <textarea 
+                                className="auth-input" 
+                                rows="4" 
+                                style={{ resize: 'none' }}
+                                value={newComplaint.description}
+                                onChange={e => setNewComplaint({...newComplaint, description: e.target.value})}
+                                required
+                            ></textarea>
+                        </div>
+                        <button type="submit" className="btn-download" style={{ width: '100%', justifyContent: 'center' }} disabled={loading}>
+                            <Send size={16} /> {loading ? 'Posting...' : 'Post Complaint'}
+                        </button>
+                    </form>
+                ) : (
+                    <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                        <AlertCircle size={32} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
+                        <p>Only Workers can file new grievances.</p>
+                        <p style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>Advocates manage and resolve existing complaints.</p>
                     </div>
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Category</label>
-                        <select className="auth-input" value={newComplaint.category} onChange={e => setNewComplaint({...newComplaint, category: e.target.value})}>
-                            <option>Payment Dispute</option>
-                            <option>Account Ban</option>
-                            <option>Unfair Deduction</option>
-                            <option>Safety Issue</option>
-                        </select>
-                    </div>
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Description</label>
-                        <textarea 
-                            className="auth-input" 
-                            rows="4" 
-                            style={{ resize: 'none' }}
-                            value={newComplaint.description}
-                            onChange={e => setNewComplaint({...newComplaint, description: e.target.value})}
-                            required
-                        ></textarea>
-                    </div>
-                    <button type="submit" className="btn-download" style={{ width: '100%', justifyContent: 'center' }} disabled={loading}>
-                        <Send size={16} /> {loading ? 'Posting...' : 'Post Complaint'}
-                    </button>
-                </form>
+                )}
             </div>
 
             <div className="chart-box" style={{ overflowY: 'auto', maxHeight: '600px' }}>
@@ -114,9 +134,14 @@ export default function GrievanceBoard() {
                                 )}
                                 </div>
                                 {user.role === 'advocate' && (
-                                    <button className="btn-download" style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }}>
-                                        Mark Resolved
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <button onClick={() => handleStatusChange(g.id, 'resolved')} className="btn-download" style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }}>
+                                            Resolve
+                                        </button>
+                                        <button onClick={() => handleStatusChange(g.id, 'escalated')} className="btn-download" style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem', background: '#f59e0b' }}>
+                                            Escalate
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         </div>

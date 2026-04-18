@@ -114,6 +114,53 @@ app.get('/api/auth/me', verifyToken, (req, res) => {
     res.json(req.user);
 });
 
+// ADMIN ONLY: Create any user
+app.post('/api/auth/admin/create-user', verifyToken, checkRole('admin'), async (req, res) => {
+    console.log(`[Admin] Create user request: ${req.body.email} (${req.body.role})`);
+    const { email, password, role } = req.body;
+    if (!['worker', 'verifier', 'advocate', 'admin'].includes(role)) {
+        return res.status(400).json({ error: 'Invalid role' });
+    }
+
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+            email, password, email_confirm: true
+        });
+
+        if (authError) return res.status(400).json({ error: authError.message });
+
+        const { error } = await supabase.from('users').insert([{
+            id: authUser.user.id,
+            email, role, password_hash: hashedPassword
+        }]);
+
+        if (error) return res.status(400).json({ error: error.message });
+        res.status(201).json({ message: 'User created successfully' });
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// ADMIN ONLY: Delete user
+app.delete('/api/auth/admin/delete-user/:id', verifyToken, checkRole('admin'), async (req, res) => {
+    const { id } = req.params;
+    console.log(`[Admin] Delete user request for ID: ${id}`);
+    try {
+        // Delete from public.users (will cascade if FKs set, but let's be safe)
+        const { error: publicError } = await supabase.from('users').delete().eq('id', id);
+        if (publicError) return res.status(400).json({ error: publicError.message });
+
+        // Delete from auth.users
+        const { error: authError } = await supabase.auth.admin.deleteUser(id);
+        if (authError) return res.status(400).json({ error: authError.message });
+
+        res.json({ message: 'User deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 const PORT = process.env.PORT || 4004;
 app.listen(PORT, () => {
     console.log(`Auth Service running on port ${PORT}`);

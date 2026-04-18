@@ -113,6 +113,22 @@ export default function WorkerDashboard() {
     window.open(`http://localhost:4003/api/certificates/generate/${user.id}`, '_blank');
   };
 
+  const downloadCSVReport = () => {
+    // Generate CSV from actual DB data
+    const csvRows = [
+        ['Date', 'Platform', 'Hours', 'Gross', 'Deductions', 'Net', 'Status'],
+        ...data.map(row => [row.name, row.platform || 'General', row.hours, row.earnings + (row.deductions || 0), row.deductions || 0, row.earnings, 'Logged'])
+    ];
+    
+    let csvContent = "data:text/csv;charset=utf-8," + csvRows.map(e => e.join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `earnings_report_${user.email}.csv`);
+    document.body.appendChild(link);
+    link.click();
+  };
+
   return (
     <div className="animate-fade-in">
       <div className="dashboard-header">
@@ -120,9 +136,14 @@ export default function WorkerDashboard() {
           <h1 className="header-title">Worker Dashboard</h1>
           <p className="header-subtitle">Intelligence & earnings tracking for {user?.email}</p>
         </div>
-        <button className="btn-download" onClick={handleDownload}>
-          <Download size={16} /> Income Certificate
-        </button>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+            <button className="btn-download" onClick={downloadCSVReport} style={{ background: 'var(--accent-blue)' }}>
+                <Download size={16} /> Download CSV
+            </button>
+            <button className="btn-download" onClick={handleDownload}>
+                <FileText size={16} /> Income Certificate
+            </button>
+        </div>
       </div>
 
       {anomaly && (

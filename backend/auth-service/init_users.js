@@ -1,7 +1,6 @@
 require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
 const bcrypt = require('bcryptjs');
-const crypto = require('crypto');
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
@@ -10,44 +9,49 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 async function initDefaultUsers() {
     console.log("Initializing default test users...");
 
+    // 1. Delete the old admin if it exists
+    const oldAdminEmail = 'admin@test.com';
+    const { data: { users: allAuthUsers } } = await supabase.auth.admin.listUsers();
+    const oldAdmin = allAuthUsers.find(u => u.email === oldAdminEmail);
+    if (oldAdmin) {
+        console.log(`Deleting old admin: ${oldAdminEmail}`);
+        await supabase.from('users').delete().eq('email', oldAdminEmail);
+        await supabase.auth.admin.deleteUser(oldAdmin.id);
+    }
+
     const users = [
         { email: 'worker@test.com', role: 'worker', password: 'password123' },
         { email: 'verifier@test.com', role: 'verifier', password: 'password123' },
-        { email: 'advocate@test.com', role: 'advocate', password: 'password123' }
+        { email: 'advocate@test.com', role: 'advocate', password: 'password123' },
+        { email: 'boss@gmail.com', role: 'admin', password: 'taha123' }
     ];
 
     for (const u of users) {
         try {
-            // Check if exists
-            const { data: existing } = await supabase.from('users').select('id').eq('email', u.email).single();
-            if (existing) {
-                console.log(`User ${u.email} already exists.`);
-                continue;
-            }
-
             const hashedPassword = await bcrypt.hash(u.password, 10);
-            
-            // Create in auth.users first due to foreign key constraint
-            const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-                email: u.email,
-                password: u.password,
-                email_confirm: true
-            });
-
-            if (authError && !authError.message.includes('already registered')) {
-                console.error(`Auth Error for ${u.email}:`, authError.message);
-                continue;
-            }
-
-            // Get ID (either newly created or fetch existing)
             let userId;
-            if (authUser?.user) {
-                userId = authUser.user.id;
+
+            const existingAuth = allAuthUsers.find(x => x.email === u.email);
+
+            if (existingAuth) {
+                userId = existingAuth.id;
+                console.log(`Updating existing user: ${u.email}`);
+                await supabase.auth.admin.updateUserById(userId, { password: u.password });
             } else {
-                const { data: existingAuth } = await supabase.auth.admin.listUsers();
-                userId = existingAuth.users.find(x => x.email === u.email)?.id;
+                console.log(`Creating new user: ${u.email}`);
+                const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+                    email: u.email,
+                    password: u.password,
+                    email_confirm: true
+                });
+                if (authError) {
+                    console.error(`Auth Error for ${u.email}:`, authError.message);
+                    continue;
+                }
+                userId = authUser.user.id;
             }
 
+            // Sync to public.users
             const { error } = await supabase.from('users').upsert([{
                 id: userId,
                 email: u.email,
@@ -56,15 +60,15 @@ async function initDefaultUsers() {
             }]);
 
             if (error) {
-                console.error(`Failed to create ${u.email}:`, error.message);
+                console.error(`Failed to update DB for ${u.email}:`, error.message);
             } else {
-                console.log(`Successfully created ${u.email} (${u.role})`);
+                console.log(`Successfully synced ${u.email} (${u.role})`);
             }
         } catch (err) {
-            console.error(err);
+            console.error(`Unexpected error for ${u.email}:`, err);
         }
     }
-    console.log("Done!");
+    console.log("Initialization complete!");
 }
 
 initDefaultUsers();

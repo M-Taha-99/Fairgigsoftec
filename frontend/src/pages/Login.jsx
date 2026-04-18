@@ -18,6 +18,7 @@ export default function Login() {
             if (user.role === 'worker') navigate('/worker');
             else if (user.role === 'verifier') navigate('/verifier');
             else if (user.role === 'advocate') navigate('/advocate');
+            else if (user.role === 'admin') navigate('/admin');
             else setError(`Login success, but role "${user.role}" is unrecognized.`);
         } catch (err) {
             if (err.response) {

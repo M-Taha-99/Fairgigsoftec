@@ -6,7 +6,9 @@ import WorkerDashboard from './pages/WorkerDashboard';
 import LogEarnings from './pages/LogEarnings';
 import VerifierDashboard from './pages/VerifierDashboard';
 import AdvocateDashboard from './pages/AdvocateDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import GrievanceBoard from './pages/Grievance';
+import BulletinBoard from './pages/BulletinBoard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
@@ -51,6 +53,7 @@ function App() {
                   <Route path="/" element={<WorkerDashboard />} />
                   <Route path="/log" element={<LogEarnings />} />
                   <Route path="/grievances" element={<GrievanceBoard />} />
+                  <Route path="/bulletin" element={<BulletinBoard />} />
                 </Routes>
               </Layout>
             </ProtectedRoute>
@@ -62,6 +65,7 @@ function App() {
               <Layout>
                 <Routes>
                   <Route path="/" element={<VerifierDashboard />} />
+                  <Route path="/bulletin" element={<BulletinBoard />} />
                 </Routes>
               </Layout>
             </ProtectedRoute>
@@ -74,6 +78,20 @@ function App() {
                 <Routes>
                   <Route path="/" element={<AdvocateDashboard />} />
                   <Route path="/grievances" element={<GrievanceBoard />} />
+                  <Route path="/bulletin" element={<BulletinBoard />} />
+                </Routes>
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          {/* Admin Routes */}
+          <Route path="/admin/*" element={
+            <ProtectedRoute allowedRole="admin">
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<AdminDashboard />} />
+                  <Route path="/grievances" element={<GrievanceBoard />} />
+                  <Route path="/bulletin" element={<BulletinBoard />} />
                 </Routes>
               </Layout>
             </ProtectedRoute>
