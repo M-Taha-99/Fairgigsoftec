@@ -7,9 +7,11 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { LanguageContext } from '../context/LanguageContext';
 
 export default function LogEarnings() {
   const { user } = useContext(AuthContext);
+  const { t, lang } = useContext(LanguageContext);
   const navigate = useNavigate();
   const [platform, setPlatform] = useState('Uber');
   const [shiftDate, setShiftDate] = useState(new Date().toISOString().split('T')[0]);
@@ -145,11 +147,11 @@ export default function LogEarnings() {
     <div className="animate-fade-in" style={{ maxWidth: '900px', margin: '0 auto' }}>
       <div className="dashboard-header" style={{ marginBottom: '2rem' }}>
         <div>
-          <h1 className="header-title">Log Your Shift</h1>
-          <p className="header-subtitle">Easy logging for your platform earnings</p>
+          <h1 className="header-title">{t.log.title}</h1>
+          <p className="header-subtitle">{t.log.subtitle}</p>
         </div>
         <button className="nav-link" onClick={() => navigate('/worker')} style={{ background: 'white', padding: '0.6rem 1rem', borderRadius: '8px' }}>
-          <ArrowLeft size={16} /> Back to Dashboard
+          <ArrowLeft size={16} /> {t.common.back}
         </button>
       </div>
 
@@ -162,12 +164,12 @@ export default function LogEarnings() {
       <div className="grid-middle-row" style={{ gridTemplateColumns: '1fr 1.5fr' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <div className="chart-box">
-                <h3 className="chart-title"><Upload size={18}/> Quick AI Upload</h3>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Upload a screenshot. Our AI will automatically extract the numbers for you.</p>
+                <h3 className="chart-title"><Upload size={18}/> {lang === 'ur' ? 'فوری اپ لوڈ' : 'Quick AI Upload'}</h3>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>{t.log.screenshot}</p>
                 
                 <input type="file" id="screenshot" hidden onChange={handleScreenshotUpload} accept="image/*" />
                 <label htmlFor="screenshot" className="auth-btn" style={{ width: '100%', cursor: 'pointer', textAlign: 'center', background: loading ? 'var(--text-muted)' : 'var(--accent-blue)' }}>
-                    {loading ? 'Uploading Evidence...' : 'Upload Earnings Screenshot'}
+                    {loading ? (lang === 'ur' ? 'اپ لوڈ ہو رہا ہے...' : 'Uploading Evidence...') : (lang === 'ur' ? 'اسکرین شاٹ اپ لوڈ کریں' : 'Upload Earnings Screenshot')}
                 </label>
 
                 {screenshotUrl && !screenshotUrl.includes('.csv') && (
@@ -180,26 +182,26 @@ export default function LogEarnings() {
 
             <div className="chart-box">
                 <h3 className="chart-title"><FileText size={18}/> CSV Import</h3>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Upload your exported CSV data for bulk logging.</p>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>{lang === 'ur' ? 'بلک لاگنگ کے لیے اپنی CSV فائل اپ لوڈ کریں۔' : 'Upload your exported CSV data for bulk logging.'}</p>
                 <input type="file" id="csv_upload" hidden accept=".csv" onChange={handleCSVImport} />
                 <label htmlFor="csv_upload" className="auth-btn" style={{ width: '100%', cursor: 'pointer', textAlign: 'center', background: 'transparent', color: 'var(--accent-blue)', border: '1px solid var(--accent-blue)' }}>
-                    {loading ? 'Importing...' : 'Select CSV File'}
+                    {loading ? (lang === 'ur' ? 'امپورٹ ہو رہا ہے...' : 'Importing...') : (lang === 'ur' ? 'فائل منتخب کریں' : 'Select CSV File')}
                 </label>
                 {screenshotUrl && screenshotUrl.includes('.csv') && (
                     <div style={{ marginTop: '1rem', textAlign: 'center', color: 'var(--accent-teal)', fontSize: '0.8rem' }}>
                         <FileText size={24} style={{ marginBottom: '0.5rem' }} />
-                        <p>✓ CSV Evidence Attached</p>
+                        <p>✓ {lang === 'ur' ? 'CSV منسلک ہو گئی' : 'CSV Evidence Attached'}</p>
                     </div>
                 )}
             </div>
         </div>
 
         <div className="chart-box">
-            <h3 className="chart-title"><Clock size={18}/> Shift Details</h3>
+            <h3 className="chart-title"><Clock size={18}/> {lang === 'ur' ? 'شفٹ کی تفصیلات' : 'Shift Details'}</h3>
             <form onSubmit={handleSubmit} style={{ marginTop: '1.5rem' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.2rem' }}>
                     <div>
-                        <label style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>Platform</label>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{t.common.platform}</label>
                         <select className="auth-input" style={{ marginTop: '0.3rem' }} value={platform} onChange={e => setPlatform(e.target.value)} required>
                             <option>Uber</option>
                             <option>FoodPanda</option>
@@ -208,33 +210,33 @@ export default function LogEarnings() {
                         </select>
                     </div>
                     <div>
-                        <label style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>Shift Date</label>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{t.common.date}</label>
                         <input type="date" className="auth-input" style={{ marginTop: '0.3rem' }} value={shiftDate} onChange={e => setShiftDate(e.target.value)} required />
                     </div>
                 </div>
 
                 <div style={{ marginBottom: '1.2rem' }}>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>Hours Worked</label>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{t.log.hours}</label>
                     <input type="number" step="0.5" className="auth-input" style={{ marginTop: '0.3rem' }} value={hours} onChange={e => setHours(e.target.value)} placeholder="e.g. 8" required />
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
                     <div>
-                        <label style={{ fontSize: '0.7rem', fontWeight: 'bold' }}>Gross (Rs.)</label>
+                        <label style={{ fontSize: '0.7rem', fontWeight: 'bold' }}>{t.log.gross}</label>
                         <input type="number" className="auth-input" style={{ marginTop: '0.3rem' }} value={gross} onChange={e => handleGrossChange(e.target.value)} required />
                     </div>
                     <div>
-                        <label style={{ fontSize: '0.7rem', fontWeight: 'bold' }}>Fee (Rs.)</label>
+                        <label style={{ fontSize: '0.7rem', fontWeight: 'bold' }}>{lang === 'ur' ? 'کٹوتی (روپے)' : 'Fee (Rs.)'}</label>
                         <input type="number" className="auth-input" style={{ marginTop: '0.3rem' }} value={deductions} onChange={e => handleDeductionsChange(e.target.value)} required />
                     </div>
                     <div>
-                        <label style={{ fontSize: '0.7rem', fontWeight: 'bold' }}>Net (Auto)</label>
+                        <label style={{ fontSize: '0.7rem', fontWeight: 'bold' }}>{lang === 'ur' ? 'خالص (خودکار)' : 'Net (Auto)'}</label>
                         <input type="number" className="auth-input" style={{ marginTop: '0.3rem', background: '#f1f5f9', fontWeight: 'bold', color: 'var(--accent-teal)' }} value={net} readOnly />
                     </div>
                 </div>
 
                 <button type="submit" className="auth-btn" style={{ width: '100%' }} disabled={loading}>
-                    {loading ? 'Logging...' : 'Submit for Verification'}
+                    {loading ? (lang === 'ur' ? 'درج ہو رہا ہے...' : 'Logging...') : (t.common.submit)}
                 </button>
             </form>
         </div>

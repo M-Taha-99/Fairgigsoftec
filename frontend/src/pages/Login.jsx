@@ -1,11 +1,14 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { LanguageContext } from '../context/LanguageContext';
+import { Globe } from 'lucide-react';
 
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const { login } = useContext(AuthContext);
+    const { t, lang, setLang } = useContext(LanguageContext);
     const navigate = useNavigate();
     const location = useLocation();
     const [error, setError] = useState('');
@@ -34,13 +37,19 @@ export default function Login() {
     return (
         <div className="auth-container">
             <div className="auth-box">
-                <h2 style={{ textAlign: 'center', marginBottom: '1.5rem', color: 'var(--accent-blue)' }}>FairGig Login</h2>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+                    <button onClick={() => setLang(lang === 'en' ? 'ur' : 'en')} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer', fontWeight: 'bold' }}>
+                        <Globe size={14} /> {lang === 'en' ? 'Urdu' : 'English'}
+                    </button>
+                </div>
+                <h2 style={{ textAlign: 'center', marginBottom: '0.5rem', color: 'var(--accent-blue)' }}>{t.auth.login_title}</h2>
+                <p style={{ textAlign: 'center', marginBottom: '1.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{t.auth.login_sub}</p>
                 {successMessage && <p style={{ color: 'var(--accent-teal)', textAlign: 'center', marginBottom: '1rem', fontSize: '0.9rem' }}>{successMessage}</p>}
                 {error && <p style={{ color: 'red', textAlign: 'center', marginBottom: '1rem', fontSize: '0.8rem' }}>{error}</p>}
                 <form onSubmit={handleSubmit}>
                     <input 
                         type="email" 
-                        placeholder="Email (e.g. alex.worker@example.com)" 
+                        placeholder={t.auth.email} 
                         className="auth-input" 
                         value={email} 
                         onChange={e => setEmail(e.target.value)} 
@@ -48,16 +57,16 @@ export default function Login() {
                     />
                     <input 
                         type="password" 
-                        placeholder="Password" 
+                        placeholder={t.auth.password} 
                         className="auth-input" 
                         value={password} 
                         onChange={e => setPassword(e.target.value)} 
                         required 
                     />
-                    <button type="submit" className="auth-btn">Sign In</button>
+                    <button type="submit" className="auth-btn">{t.auth.login_btn}</button>
                 </form>
                 <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.85rem', color: 'var(--text-primary)' }}>
-                    Don't have an account? <Link to="/register" style={{ color: 'var(--accent-teal)' }}>Register here</Link>
+                    {t.auth.no_acc} <Link to="/register" style={{ color: 'var(--accent-teal)' }}>{lang === 'ur' ? 'یہاں رجسٹر کریں' : 'Register here'}</Link>
                 </p>
             </div>
         </div>

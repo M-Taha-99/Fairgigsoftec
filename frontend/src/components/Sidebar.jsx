@@ -1,10 +1,13 @@
 import React, { useContext } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Users, FileText, Calendar, HelpCircle, BarChart2, PieChart, TrendingUp, Map, AlertCircle, MessageSquare, Shield } from 'lucide-react';
+import { Home, Users, FileText, Calendar, HelpCircle, BarChart2, PieChart, TrendingUp, Map, AlertCircle, MessageSquare, Shield, Globe } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
+import { LanguageContext } from '../context/LanguageContext';
+import { supabase } from '../lib/supabase';
 
 export default function Sidebar() {
   const { user } = useContext(AuthContext);
+  const { lang, setLang, t } = useContext(LanguageContext);
   const [pendingCount, setPendingCount] = React.useState(0);
 
   React.useEffect(() => {
@@ -36,41 +39,41 @@ export default function Sidebar() {
 
       <nav>
         <NavLink to={`/${user.role}`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"} end>
-          <Home size={18} /> Dashboard
+          <Home size={18} /> {t.nav.dashboard}
         </NavLink>
 
-        <div className="nav-section-title">Operations</div>
+        <div className="nav-section-title">{lang === 'ur' ? 'آپریشنز' : 'Operations'}</div>
         {user.role === 'worker' ? (
             <>
                 <NavLink to={`/worker/log`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
-                    <FileText size={18} /> Log Earnings
+                    <FileText size={18} /> {t.worker.log_shift}
                 </NavLink>
                 <NavLink to={`/worker/grievances`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
-                    <AlertCircle size={18} /> Grievance Board
+                    <AlertCircle size={18} /> {t.nav.grievances}
                 </NavLink>
                 <NavLink to={`/worker/bulletin`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
-                    <MessageSquare size={18} /> Community Bulletin
+                    <MessageSquare size={18} /> {t.nav.bulletin}
                 </NavLink>
             </>
         ) : user.role === 'verifier' ? (
             <>
                 <NavLink to={`/verifier/queue`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <Shield size={18} /> Verification Queue
+                        <Shield size={18} /> {t.nav.queue}
                     </div>
                     {pendingCount > 0 && <span style={{ background: '#ef4444', color: 'white', fontSize: '0.65rem', padding: '2px 6px', borderRadius: '10px', fontWeight: 'bold' }}>{pendingCount}</span>}
                 </NavLink>
                 <NavLink to={`/verifier/bulletin`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
-                    <MessageSquare size={18} /> Community Bulletin
+                    <MessageSquare size={18} /> {t.nav.bulletin}
                 </NavLink>
             </>
         ) : user.role === 'advocate' ? (
             <>
                 <NavLink to={`/advocate/grievances`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
-                    <AlertCircle size={18} /> Manage Grievances
+                    <AlertCircle size={18} /> {t.nav.grievances}
                 </NavLink>
                 <NavLink to={`/advocate/bulletin`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
-                    <MessageSquare size={18} /> Community Bulletin
+                    <MessageSquare size={18} /> {t.nav.bulletin}
                 </NavLink>
             </>
         ) : (
@@ -79,18 +82,40 @@ export default function Sidebar() {
                     <Shield size={18} /> Command Center
                 </NavLink>
                 <NavLink to={`/admin/bulletin`} className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
-                    <MessageSquare size={18} /> Community Bulletin
+                    <MessageSquare size={18} /> {t.nav.bulletin}
                 </NavLink>
             </>
         )}
         
-        <div className="nav-section-title">Account</div>
+        <div className="nav-section-title">{lang === 'ur' ? 'اکاؤنٹ' : 'Account'}</div>
         <NavLink to={`/${user.role}/profile`} className="nav-link">
-          <Users size={18} /> Profile
+          <Users size={18} /> {t.nav.profile}
         </NavLink>
         <NavLink to={`/${user.role}/faq`} className="nav-link">
-          <HelpCircle size={18} /> Support / FAQ
+          <HelpCircle size={18} /> {t.nav.faq}
         </NavLink>
+
+        <div style={{ marginTop: '2rem', padding: '0 1.5rem' }}>
+            <button 
+                onClick={() => setLang(lang === 'en' ? 'ur' : 'en')}
+                style={{ 
+                    width: '100%', 
+                    padding: '0.6rem', 
+                    borderRadius: '8px', 
+                    border: '1px solid var(--border-color)',
+                    background: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    cursor: 'pointer',
+                    fontSize: '0.8rem',
+                    fontWeight: '600'
+                }}
+            >
+                <Globe size={14} /> {lang === 'en' ? 'Urdu (اردو)' : 'English'}
+            </button>
+        </div>
       </nav>
     </aside>
   );

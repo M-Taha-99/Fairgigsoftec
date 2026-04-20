@@ -7,6 +7,7 @@ import {
 } from 'recharts';
 import { DollarSign, Clock, TrendingUp, AlertTriangle, Download, FileText } from 'lucide-react';
 import axios from 'axios';
+import { LanguageContext } from '../context/LanguageContext';
 
 const PIE_COLORS = ['#6870fa', '#3da58a', '#f59e0b', '#ef4444'];
 const BAR_COLORS = ['#3da58a', '#f59e0b', '#6870fa', '#ef4444'];
@@ -27,6 +28,7 @@ const mockPlatformData = [
 
 export default function WorkerDashboard() {
   const { user } = useContext(AuthContext);
+  const { t, lang } = useContext(LanguageContext);
   const [data, setData] = useState([]);
   const [earningsData, setEarningsData] = useState([]);
   const [stats, setStats] = useState({ totalNet: 0, hourlyRate: 0, totalHours: 0, cityMedian: 460 });
@@ -135,15 +137,15 @@ export default function WorkerDashboard() {
     <div className="animate-fade-in">
       <div className="dashboard-header">
         <div>
-          <h1 className="header-title">Worker Dashboard</h1>
-          <p className="header-subtitle">Intelligence & earnings tracking for {user?.email}</p>
+          <h1 className="header-title">{t.worker.title}</h1>
+          <p className="header-subtitle">{t.worker.subtitle}</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
             <button className="btn-download" onClick={downloadCSVReport} style={{ background: 'var(--accent-blue)' }}>
-                <Download size={16} /> Download CSV
+                <Download size={16} /> {t.common.download}
             </button>
             <button className="btn-download" onClick={handleDownload}>
-                <FileText size={16} /> Income Certificate
+                <FileText size={16} /> {t.worker.certificate}
             </button>
         </div>
       </div>
@@ -163,7 +165,7 @@ export default function WorkerDashboard() {
             <div className="stat-left">
                 <DollarSign color="var(--accent-teal)" size={24} />
                 <span className="stat-value">Rs. {stats.totalNet.toLocaleString()}</span>
-                <span className="stat-label">Total Net Earnings</span>
+                <span className="stat-label">{t.worker.total_net}</span>
             </div>
             <div className="stat-right">
                 <div className="progress-circle" style={{ borderColor: 'var(--accent-green)' }}></div>
@@ -173,8 +175,8 @@ export default function WorkerDashboard() {
         <div className="stat-box">
             <div className="stat-left">
                 <Clock color="var(--accent-teal)" size={24} />
-                <span className="stat-value">{stats.totalHours.toFixed(1)} hrs</span>
-                <span className="stat-label">Total Time Worked</span>
+                <span className="stat-value">{stats.totalHours.toFixed(1)} {lang === 'ur' ? 'گھنٹے' : 'hrs'}</span>
+                <span className="stat-label">{t.worker.hours}</span>
             </div>
             <div className="stat-right">
                 <div className="progress-circle" style={{ borderColor: 'var(--accent-blue)' }}></div>
@@ -184,13 +186,13 @@ export default function WorkerDashboard() {
         <div className="stat-box">
             <div className="stat-left">
                 <TrendingUp color="var(--accent-teal)" size={24} />
-                <span className="stat-value">Rs. {stats.hourlyRate}/hr</span>
-                <span className="stat-label">Effective Rate</span>
+                <span className="stat-value">Rs. {stats.hourlyRate}/{lang === 'ur' ? 'گھنٹہ' : 'hr'}</span>
+                <span className="stat-label">{t.worker.avg_rate}</span>
             </div>
             <div className="stat-right">
                 <div className="progress-circle" style={{ borderColor: stats.hourlyRate < stats.cityMedian ? '#ef4444' : 'var(--accent-teal)' }}></div>
                 <span className="stat-percent" style={{ color: stats.hourlyRate < stats.cityMedian ? '#ef4444' : 'var(--accent-teal)' }}>
-                    {stats.hourlyRate < stats.cityMedian ? 'Low' : 'Good'}
+                    {stats.hourlyRate < stats.cityMedian ? (lang === 'ur' ? 'کم' : 'Low') : (lang === 'ur' ? 'بہتر' : 'Good')}
                 </span>
             </div>
         </div>
@@ -209,7 +211,7 @@ export default function WorkerDashboard() {
 
       <div className="grid-middle-row">
         <div className="chart-box">
-            <h3 className="chart-title">Earnings Trajectory (Last 12 Shifts)</h3>
+            <h3 className="chart-title">{t.worker.earnings_trend}</h3>
             <div className="chart-container">
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data}>
@@ -248,19 +250,19 @@ export default function WorkerDashboard() {
 
       <div className="grid-bottom-row" style={{ gridTemplateColumns: '1.5fr 1fr' }}>
         <div className="chart-box">
-            <h3 className="chart-title">Earnings Performance History</h3>
+            <h3 className="chart-title">{t.worker.history}</h3>
             <div className="data-table-container" style={{ maxHeight: '400px', overflowY: 'auto' }}>
                 <table className="data-table">
                     <thead>
                         <tr>
-                            <th>Date</th>
-                            <th>Platform</th>
-                            <th>Hours</th>
-                            <th>Gross</th>
-                            <th>Fee</th>
-                            <th>Net</th>
-                            <th>Status</th>
-                            <th>Verifier's Comment</th>
+                            <th>{t.common.date}</th>
+                            <th>{t.common.platform}</th>
+                            <th>{lang === 'ur' ? 'گھنٹے' : 'Hours'}</th>
+                            <th>{lang === 'ur' ? 'کل آمدنی' : 'Gross'}</th>
+                            <th>{lang === 'ur' ? 'کٹوتی' : 'Fee'}</th>
+                            <th>{lang === 'ur' ? 'خالص' : 'Net'}</th>
+                            <th>{t.common.status}</th>
+                            <th>{lang === 'ur' ? 'تبصرہ' : 'Verifier\'s Comment'}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -293,16 +295,16 @@ export default function WorkerDashboard() {
         </div>
 
         <div className="chart-box">
-            <h3 className="chart-title">Quick Actions & Support</h3>
+            <h3 className="chart-title">{lang === 'ur' ? 'فوری کارروائی' : 'Quick Actions & Support'}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <button className="btn-download" style={{ width: '100%', justifyContent: 'center', background: 'var(--accent-teal)' }} onClick={() => window.location.href='/worker/log'}>
-                    Log New Shift
+                    {t.worker.log_shift}
                 </button>
                 <button className="btn-download" style={{ width: '100%', justifyContent: 'center', background: 'transparent', border: '1px solid var(--accent-blue)', color: 'var(--accent-blue)' }} onClick={() => window.location.href='/worker/grievances'}>
-                    Report Issue / Grievance
+                    {t.nav.grievances}
                 </button>
                 <button className="btn-download" style={{ width: '100%', justifyContent: 'center', background: 'transparent', border: '1px solid var(--accent-blue)', color: 'var(--accent-blue)' }} onClick={() => window.location.href='/worker/bulletin'}>
-                    Community Board
+                    {t.nav.bulletin}
                 </button>
                 <div style={{ marginTop: '1rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                     <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>💡 Tip: Logging screenshots helps AI detect platform errors 30% faster.</p>

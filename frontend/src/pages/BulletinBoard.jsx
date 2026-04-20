@@ -2,9 +2,11 @@ import React, { useState, useEffect, useContext } from 'react';
 import { supabase } from '../lib/supabase';
 import { AuthContext } from '../context/AuthContext';
 import { MessageSquare, Send, Trash2, ShieldAlert } from 'lucide-react';
+import { LanguageContext } from '../context/LanguageContext';
 
 export default function BulletinBoard() {
     const { user } = useContext(AuthContext);
+    const { t, lang } = useContext(LanguageContext);
     const [posts, setPosts] = useState([]);
     const [newPost, setNewPost] = useState('');
     const [loading, setLoading] = useState(true);
@@ -50,8 +52,8 @@ export default function BulletinBoard() {
         <div className="animate-fade-in">
             <div className="dashboard-header">
                 <div>
-                    <h1 className="header-title">Community Bulletin Board</h1>
-                    <p className="header-subtitle">Anonymous space for sharing updates, warnings, and support.</p>
+                    <h1 className="header-title">{t.bulletin.title}</h1>
+                    <p className="header-subtitle">{t.bulletin.subtitle}</p>
                 </div>
             </div>
 
@@ -61,12 +63,12 @@ export default function BulletinBoard() {
                         type="text" 
                         className="auth-input" 
                         style={{ marginBottom: 0 }}
-                        placeholder="Share something anonymously with the community..." 
+                        placeholder={t.bulletin.post_placeholder} 
                         value={newPost}
                         onChange={(e) => setNewPost(e.target.value)}
                     />
                     <button type="submit" className="btn-download" style={{ padding: '0.8rem 1.5rem' }}>
-                        <Send size={18} /> Post
+                        <Send size={18} /> {lang === 'ur' ? 'پوسٹ کریں' : 'Post'}
                     </button>
                 </form>
             </div>
@@ -76,7 +78,7 @@ export default function BulletinBoard() {
                     <div key={post.id} className="stat-box" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.5rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-blue)', fontWeight: 'bold', fontSize: '0.85rem' }}>
-                                <MessageSquare size={16} /> Anonymous User
+                                <MessageSquare size={16} /> {lang === 'ur' ? 'گمنام ورکر' : 'Anonymous User'}
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
                                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -86,7 +88,7 @@ export default function BulletinBoard() {
                                     <button 
                                         onClick={() => handleDelete(post.id)}
                                         style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
-                                        title="Moderate Post"
+                                        title={t.bulletin.delete_btn}
                                     >
                                         <Trash2 size={16} />
                                     </button>
@@ -101,7 +103,7 @@ export default function BulletinBoard() {
             {posts.length === 0 && !loading && (
                 <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
                     <ShieldAlert size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                    <p>No posts yet. Be the first to start the conversation!</p>
+                    <p>{lang === 'ur' ? 'ابھی تک کوئی پوسٹ نہیں ہے۔ گفتگو کا آغاز کرنے والے پہلے بنیں!' : 'No posts yet. Be the first to start the conversation!'}</p>
                 </div>
             )}
         </div>

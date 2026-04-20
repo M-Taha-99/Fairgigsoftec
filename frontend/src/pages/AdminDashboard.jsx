@@ -10,11 +10,13 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { supabase } from '../lib/supabase';
+import { LanguageContext } from '../context/LanguageContext';
 
 const PIE_COLORS = ['#6870fa', '#3da58a', '#f59e0b', '#ef4444'];
 
 export default function AdminDashboard() {
   const { user } = useContext(AuthContext);
+  const { t, lang } = useContext(LanguageContext);
   const [users, setUsers] = useState([]);
   const [earnings, setEarnings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -87,8 +89,8 @@ export default function AdminDashboard() {
     <div className="animate-fade-in">
       <div className="dashboard-header">
         <div>
-          <h1 className="header-title">Super Admin Command Center</h1>
-          <p className="header-subtitle">Full system oversight, user management, and global performance tracking.</p>
+          <h1 className="header-title">{t.admin.title}</h1>
+          <p className="header-subtitle">{t.admin.subtitle}</p>
         </div>
       </div>
 
@@ -99,7 +101,7 @@ export default function AdminDashboard() {
             <div className="stat-left">
                 <DollarSign color="var(--accent-blue)" size={24} />
                 <span className="stat-value">Rs. {totalSystemEarnings.toLocaleString()}</span>
-                <span className="stat-label">Global Net Volume</span>
+                <span className="stat-label">{t.admin.stats_volume}</span>
             </div>
             <div className="stat-right">
                 <TrendingUp color="var(--accent-green)" size={16} />
@@ -110,7 +112,7 @@ export default function AdminDashboard() {
             <div className="stat-left">
                 <Activity color="var(--accent-teal)" size={24} />
                 <span className="stat-value">{earnings.length}</span>
-                <span className="stat-label">Total Shifts Logged</span>
+                <span className="stat-label">{t.admin.stats_shifts}</span>
             </div>
             <div className="stat-right">
                 <BarChart2 color="var(--accent-blue)" size={16} />
@@ -121,7 +123,7 @@ export default function AdminDashboard() {
             <div className="stat-left">
                 <Users color="var(--accent-blue)" size={24} />
                 <span className="stat-value">{users.length}</span>
-                <span className="stat-label">System Users</span>
+                <span className="stat-label">{t.admin.stats_users}</span>
             </div>
             <div className="stat-right">
                 <Shield color="var(--accent-teal)" size={16} />
@@ -132,14 +134,14 @@ export default function AdminDashboard() {
             <div className="stat-left">
                 <AlertTriangle color="#ef4444" size={24} />
                 <span className="stat-value">{users.filter(u => u.role === 'verifier').length}</span>
-                <span className="stat-label">Trust Verifiers</span>
+                <span className="stat-label">{t.admin.stats_trust}</span>
             </div>
         </div>
       </div>
 
       <div className="grid-middle-row" style={{ gridTemplateColumns: '1.5fr 1fr' }}>
         <div className="chart-box">
-            <h3 className="chart-title">Global Platform Performance (Revenue)</h3>
+            <h3 className="chart-title">{t.admin.chart_perf}</h3>
             <div className="chart-container">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={barData.length > 0 ? barData : [{name: 'Uber', revenue: 4000}, {name: 'InDrive', revenue: 3000}]}>
@@ -154,7 +156,7 @@ export default function AdminDashboard() {
         </div>
 
         <div className="chart-box">
-            <h3 className="chart-title">User Role Distribution</h3>
+            <h3 className="chart-title">{t.admin.chart_dist}</h3>
             <div className="chart-container">
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -178,16 +180,16 @@ export default function AdminDashboard() {
 
       <div className="grid-bottom-row" style={{ gridTemplateColumns: '1fr 1fr' }}>
         <div className="chart-box">
-            <h3 className="chart-title">System User Directory & Performance</h3>
+            <h3 className="chart-title">{t.admin.directory}</h3>
             <div className="data-table-container" style={{ maxHeight: '400px', overflowY: 'auto' }}>
                 <table className="data-table">
                     <thead>
                         <tr>
-                            <th>User</th>
-                            <th>Role</th>
-                            <th>Work Count</th>
-                            <th>Total Earned</th>
-                            <th>Action</th>
+                            <th>{lang === 'ur' ? 'صارف' : 'User'}</th>
+                            <th>{t.auth.role}</th>
+                            <th>{lang === 'ur' ? 'کام کی تعداد' : 'Work Count'}</th>
+                            <th>{lang === 'ur' ? 'کل کمایا' : 'Total Earned'}</th>
+                            <th>{t.common.action}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -219,28 +221,28 @@ export default function AdminDashboard() {
         </div>
 
         <div className="chart-box">
-            <h3 className="chart-title">Provisional User Onboarding</h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Directly provision high-privileged accounts (Advocates/Verifiers) or demo workers.</p>
+            <h3 className="chart-title">{t.admin.onboard}</h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>{lang === 'ur' ? 'براہ راست ایڈووکیٹ/ویریفائر اکاؤنٹس یا ڈیمو ورکرز بنائیں۔' : 'Directly provision high-privileged accounts (Advocates/Verifiers) or demo workers.'}</p>
             <form onSubmit={handleCreateUser}>
                 <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>Email Address</label>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{t.auth.email}</label>
                     <input type="email" placeholder="email@example.com" className="auth-input" style={{ marginTop: '0.3rem' }} value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} required />
                 </div>
                 <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>Password</label>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{t.auth.password}</label>
                     <input type="password" placeholder="••••••••" className="auth-input" style={{ marginTop: '0.3rem' }} value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} required />
                 </div>
                 <div style={{ marginBottom: '1.5rem' }}>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>System Role</label>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{t.auth.role}</label>
                     <select className="auth-input" style={{ marginTop: '0.3rem' }} value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})}>
-                        <option value="worker">Gig Worker</option>
-                        <option value="verifier">Verifier (Audit)</option>
-                        <option value="advocate">Platform Advocate</option>
-                        <option value="admin">System Admin</option>
+                        <option value="worker">{lang === 'ur' ? 'گگ ورکر' : 'Gig Worker'}</option>
+                        <option value="verifier">{lang === 'ur' ? 'ویریفائر (آڈٹ)' : 'Verifier (Audit)'}</option>
+                        <option value="advocate">{lang === 'ur' ? 'پلیٹ فارم ایڈووکیٹ' : 'Platform Advocate'}</option>
+                        <option value="admin">{lang === 'ur' ? 'سسٹم ایڈمن' : 'System Admin'}</option>
                     </select>
                 </div>
                 <button type="submit" className="auth-btn" style={{ background: 'var(--accent-teal)' }}>
-                    <UserPlus size={18} /> Provision New Account
+                    <UserPlus size={18} /> {lang === 'ur' ? 'نیا اکاؤنٹ بنائیں' : 'Provision New Account'}
                 </button>
             </form>
         </div>

@@ -10,6 +10,7 @@ import {
     PieChart, Pie
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
+import { LanguageContext } from '../context/LanguageContext';
 
 const PIE_COLORS = ['#3da58a', '#f59e0b', '#ef4444'];
 
@@ -21,6 +22,7 @@ const STATUS_COLORS = {
 
 export default function VerifierDashboard() {
   const { user } = useContext(AuthContext);
+  const { t, lang } = useContext(LanguageContext);
   const navigate = useNavigate();
   const [stats, setStats] = useState({ pending: 0, verified: 0, disputed: 0, unverifiable: 0 });
   const [recentAudits, setRecentAudits] = useState([]);
@@ -106,15 +108,15 @@ export default function VerifierDashboard() {
     <div className="animate-fade-in">
       <header className="dashboard-header">
         <div>
-          <h1 className="header-title">Verifier Overview</h1>
-          <p className="header-subtitle">Monitoring digital labor integrity and trust protocols.</p>
+          <h1 className="header-title">{t.verifier.title}</h1>
+          <p className="header-subtitle">{t.verifier.subtitle}</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
             <button className="btn-download" onClick={downloadAuditReport} style={{ background: 'white', border: '1px solid #ddd', color: 'var(--text-primary)' }}>
-                <Download size={16} /> Download Audit Report
+                <Download size={16} /> {t.common.download}
             </button>
             <button className="auth-btn" onClick={() => navigate('/verifier/queue')} style={{ width: 'auto', padding: '0.8rem 1.5rem' }}>
-                <Activity size={18} /> Open Verification Queue
+                <Activity size={18} /> {t.verifier.queue_btn}
             </button>
         </div>
       </header>
@@ -124,28 +126,28 @@ export default function VerifierDashboard() {
             <div className="stat-left">
                 <Clock color="var(--accent-blue)" size={24} />
                 <span className="stat-value">{stats.pending}</span>
-                <span className="stat-label">Pending Review</span>
+                <span className="stat-label">{t.verifier.stats_pending}</span>
             </div>
         </div>
         <div className="stat-box">
             <div className="stat-left">
                 <CheckCircle color="var(--accent-green)" size={24} />
                 <span className="stat-value">{stats.verified}</span>
-                <span className="stat-label">Total Verified</span>
+                <span className="stat-label">{t.verifier.stats_verified}</span>
             </div>
         </div>
         <div className="stat-box">
             <div className="stat-left">
                 <AlertTriangle color="#f59e0b" size={24} />
                 <span className="stat-value">{stats.disputed}</span>
-                <span className="stat-label">Flagged Issues</span>
+                <span className="stat-label">{t.verifier.stats_flagged}</span>
             </div>
         </div>
       </div>
 
       <div className="grid-middle-row" style={{ gridTemplateColumns: '1.5fr 1fr' }}>
         <div className="chart-box">
-            <h3 className="chart-title">System-wide Verification Integrity</h3>
+            <h3 className="chart-title">{t.verifier.chart_integrity}</h3>
             <div className="chart-container">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData}>
@@ -164,7 +166,7 @@ export default function VerifierDashboard() {
         </div>
 
         <div className="chart-box">
-            <h3 className="chart-title">Status Distribution</h3>
+            <h3 className="chart-title">{t.verifier.chart_dist}</h3>
             <div className="chart-container" style={{ height: '300px' }}>
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -196,17 +198,17 @@ export default function VerifierDashboard() {
 
       <div className="grid-bottom-row" style={{ gridTemplateColumns: '1fr' }}>
         <div className="chart-box">
-            <h3 className="chart-title">Your Personal Audit History</h3>
+            <h3 className="chart-title">{t.verifier.history_title}</h3>
             <div className="data-table-container">
                 <table className="data-table">
                     <thead>
                         <tr>
-                            <th>Time</th>
-                            <th>Worker</th>
-                            <th>Platform</th>
-                            <th>Amount</th>
-                            <th>Status</th>
-                            <th>Verifier Note</th>
+                            <th>{t.common.date}</th>
+                            <th>{lang === 'ur' ? 'ورکر' : 'Worker'}</th>
+                            <th>{t.common.platform}</th>
+                            <th>{t.common.amount}</th>
+                            <th>{t.common.status}</th>
+                            <th>{t.common.note}</th>
                         </tr>
                     </thead>
                     <tbody>

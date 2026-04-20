@@ -11,11 +11,13 @@ import {
     MapPin, ShieldAlert, Trash2, ExternalLink, Activity, Info
 } from 'lucide-react';
 import axios from 'axios';
+import { LanguageContext } from '../context/LanguageContext';
 
 const PIE_COLORS = ['#6870fa', '#3da58a', '#f59e0b', '#ef4444'];
 
 export default function AdvocateDashboard() {
   const { user } = useContext(AuthContext);
+  const { t, lang } = useContext(LanguageContext);
   const [grievances, setGrievances] = useState([]);
   const [vulnerabilityFlags, setVulnerabilityFlags] = useState([]);
   const [stats, setStats] = useState({ totalVolume: 0, totalCommission: 0, openGrievances: 0 });
@@ -144,11 +146,11 @@ export default function AdvocateDashboard() {
     <div className="animate-fade-in" style={{ paddingBottom: '3rem' }}>
       <header className="dashboard-header">
         <div>
-          <h1 className="header-title">Advocate Oversight Panel</h1>
-          <p className="header-subtitle">Systemic analysis, commission monitoring, and collective bargaining support.</p>
+          <h1 className="header-title">{t.advocate.title}</h1>
+          <p className="header-subtitle">{t.advocate.subtitle}</p>
         </div>
         <button className="btn-download" onClick={downloadGlobalReport} style={{ background: 'white', border: '1px solid #ddd', color: 'var(--text-primary)' }}>
-            <Download size={16} /> Download Global Research Data
+            <Download size={16} /> {t.common.download}
         </button>
       </header>
 
@@ -157,28 +159,28 @@ export default function AdvocateDashboard() {
             <div className="stat-left">
                 <ShieldAlert color="#ef4444" size={24} />
                 <span className="stat-value">{vulnerabilityFlags.length}</span>
-                <span className="stat-label">Vulnerability Flags</span>
+                <span className="stat-label">{t.advocate.stats_vulnerability}</span>
             </div>
         </div>
         <div className="stat-box">
             <div className="stat-left">
                 <TrendingDown color="var(--accent-teal)" size={24} />
                 <span className="stat-value">Rs. {stats.totalCommission.toLocaleString()}</span>
-                <span className="stat-label">Systemic Extraction</span>
+                <span className="stat-label">{t.advocate.stats_extraction}</span>
             </div>
         </div>
         <div className="stat-box">
             <div className="stat-left">
                 <Layers color="#f59e0b" size={24} />
                 <span className="stat-value">{stats.openGrievances}</span>
-                <span className="stat-label">Grievance Clusters</span>
+                <span className="stat-label">{lang === 'ur' ? 'شکایات کے گروپ' : 'Grievance Clusters'}</span>
             </div>
         </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
         <div className="chart-box">
-            <h3 className="chart-title">Commission Trends (%)</h3>
+            <h3 className="chart-title">{t.advocate.chart_commission}</h3>
             <div className="chart-container">
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={[
@@ -199,7 +201,7 @@ export default function AdvocateDashboard() {
         </div>
 
         <div className="chart-box">
-            <h3 className="chart-title">Income Distribution</h3>
+            <h3 className="chart-title">{t.advocate.chart_zones}</h3>
             <div className="chart-container">
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -216,18 +218,18 @@ export default function AdvocateDashboard() {
       {/* WORKER RESEARCH HUB: HISTORY & ANOMALY */}
       <div className="chart-box" style={{ marginBottom: '1.5rem', background: 'var(--accent-blue-light)', border: '1px solid var(--accent-blue)' }}>
         <h3 className="chart-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Search size={18} /> Individual Worker Research Hub
+            <Search size={18} /> {t.advocate.research_hub}
         </h3>
         <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', marginBottom: '1.5rem' }}>
             <input 
                 type="text" 
                 className="auth-input" 
                 style={{ marginBottom: 0, flex: 1 }} 
-                placeholder="Enter Worker Email to inspect history..." 
+                placeholder={t.advocate.search_placeholder} 
                 value={searchId}
                 onChange={e => setSearchId(e.target.value)}
             />
-            <button onClick={handleSearchWorker} className="auth-btn" style={{ width: 'auto', padding: '0 2rem' }}>Inspect Worker</button>
+            <button onClick={handleSearchWorker} className="auth-btn" style={{ width: 'auto', padding: '0 2rem' }}>{t.advocate.inspect_btn}</button>
         </div>
 
         {researchedWorker && (
@@ -249,10 +251,10 @@ export default function AdvocateDashboard() {
                         <table className="data-table">
                             <thead>
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Platform</th>
-                                    <th>Net</th>
-                                    <th>Status</th>
+                                    <th>{t.common.date}</th>
+                                    <th>{t.common.platform}</th>
+                                    <th>{lang === 'ur' ? 'خالص' : 'Net'}</th>
+                                    <th>{t.common.status}</th>
                                 </tr>
                             </thead>
                             <tbody>

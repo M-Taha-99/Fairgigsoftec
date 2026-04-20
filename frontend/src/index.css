@@ -58,11 +58,15 @@ body {
 .sidebar {
   width: 250px;
   background: var(--bg-sidebar);
-  border-right: 1px solid var(--border-color);
+  border-inline-end: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   box-shadow: 2px 0 10px rgba(0,0,0,0.02);
+}
+
+[dir="rtl"] .sidebar {
+  box-shadow: -2px 0 10px rgba(0,0,0,0.02);
 }
 
 .profile-section {
@@ -123,7 +127,7 @@ body {
 .nav-link.active {
   color: var(--accent-blue);
   background: rgba(104, 112, 250, 0.08);
-  border-right: 3px solid var(--accent-blue);
+  border-inline-end: 3px solid var(--accent-blue);
 }
 
 /* Main Content Area */
@@ -139,7 +143,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 2.5rem;
+  padding-inline: 2.5rem;
   background: var(--bg-topbar);
   height: 70px;
   border-bottom: 1px solid var(--border-color);
@@ -160,7 +164,7 @@ body {
   color: var(--text-primary);
   outline: none;
   width: 100%;
-  margin-left: 0.6rem;
+  margin-inline-start: 0.6rem;
   font-size: 0.85rem;
 }
 
@@ -180,7 +184,8 @@ body {
 }
 
 .main-content {
-  padding: 2rem 2.5rem;
+  padding-block: 2rem;
+  padding-inline: 2.5rem;
   overflow-y: auto;
   flex: 1;
 }
@@ -402,7 +407,7 @@ body {
 .data-table th {
   background: #f8fafc;
   padding: 1rem;
-  text-align: left;
+  text-align: start;
   font-size: 0.8rem;
   text-transform: uppercase;
   color: #64748b;

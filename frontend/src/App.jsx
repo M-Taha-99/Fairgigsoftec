@@ -16,6 +16,7 @@ import Profile from './pages/Profile';
 import SupportFAQ from './pages/SupportFAQ';
 import Home from './pages/Home';
 import { AuthProvider, AuthContext } from './context/AuthContext';
+import { LanguageProvider } from './context/LanguageContext';
 
 function ProtectedRoute({ children, allowedRole }) {
   const { user, loading } = useContext(AuthContext);
@@ -41,74 +42,77 @@ function Layout({ children }) {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+    <LanguageProvider>
+      <AuthProvider>
+        <Router>
+          {/* ... routes ... */}
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-          {/* Worker Routes */}
-          <Route path="/worker/*" element={
-            <ProtectedRoute allowedRole="worker">
-              <Layout>
-                <Routes>
-                  <Route path="/" element={<WorkerDashboard />} />
-                  <Route path="/log" element={<LogEarnings />} />
-                  <Route path="/grievances" element={<GrievanceBoard />} />
-                  <Route path="/bulletin" element={<BulletinBoard />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/faq" element={<SupportFAQ />} />
-                </Routes>
-              </Layout>
-            </ProtectedRoute>
-          } />
+            {/* Worker Routes */}
+            <Route path="/worker/*" element={
+              <ProtectedRoute allowedRole="worker">
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={<WorkerDashboard />} />
+                    <Route path="/log" element={<LogEarnings />} />
+                    <Route path="/grievances" element={<GrievanceBoard />} />
+                    <Route path="/bulletin" element={<BulletinBoard />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/faq" element={<SupportFAQ />} />
+                  </Routes>
+                </Layout>
+              </ProtectedRoute>
+            } />
 
-          {/* Verifier Routes */}
-          <Route path="/verifier/*" element={
-            <ProtectedRoute allowedRole="verifier">
-              <Layout>
-                <Routes>
-                  <Route path="/" element={<VerifierDashboard />} />
-                  <Route path="/queue" element={<VerificationQueue />} />
-                  <Route path="/bulletin" element={<BulletinBoard />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/faq" element={<SupportFAQ />} />
-                </Routes>
-              </Layout>
-            </ProtectedRoute>
-          } />
+            {/* Verifier Routes */}
+            <Route path="/verifier/*" element={
+              <ProtectedRoute allowedRole="verifier">
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={<VerifierDashboard />} />
+                    <Route path="/queue" element={<VerificationQueue />} />
+                    <Route path="/bulletin" element={<BulletinBoard />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/faq" element={<SupportFAQ />} />
+                  </Routes>
+                </Layout>
+              </ProtectedRoute>
+            } />
 
-          {/* Advocate Routes */}
-          <Route path="/advocate/*" element={
-            <ProtectedRoute allowedRole="advocate">
-              <Layout>
-                <Routes>
-                  <Route path="/" element={<AdvocateDashboard />} />
-                  <Route path="/grievances" element={<GrievanceBoard />} />
-                  <Route path="/bulletin" element={<BulletinBoard />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/faq" element={<SupportFAQ />} />
-                </Routes>
-              </Layout>
-            </ProtectedRoute>
-          } />
-          
-          {/* Admin Routes */}
-          <Route path="/admin/*" element={
-            <ProtectedRoute allowedRole="admin">
-              <Layout>
-                <Routes>
-                  <Route path="/" element={<AdminDashboard />} />
-                  <Route path="/grievances" element={<GrievanceBoard />} />
-                  <Route path="/bulletin" element={<BulletinBoard />} />
-                </Routes>
-              </Layout>
-            </ProtectedRoute>
-          } />
-        </Routes>
-      </Router>
-    </AuthProvider>
+            {/* Advocate Routes */}
+            <Route path="/advocate/*" element={
+              <ProtectedRoute allowedRole="advocate">
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={<AdvocateDashboard />} />
+                    <Route path="/grievances" element={<GrievanceBoard />} />
+                    <Route path="/bulletin" element={<BulletinBoard />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/faq" element={<SupportFAQ />} />
+                  </Routes>
+                </Layout>
+              </ProtectedRoute>
+            } />
+            
+            {/* Admin Routes */}
+            <Route path="/admin/*" element={
+              <ProtectedRoute allowedRole="admin">
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={<AdminDashboard />} />
+                    <Route path="/grievances" element={<GrievanceBoard />} />
+                    <Route path="/bulletin" element={<BulletinBoard />} />
+                  </Routes>
+                </Layout>
+              </ProtectedRoute>
+            } />
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }
 

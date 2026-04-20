@@ -2,11 +2,13 @@ import React, { useState, useEffect, useContext } from 'react';
 import { supabase } from '../lib/supabase';
 import { AuthContext } from '../context/AuthContext';
 import { MessageSquare, Send, Tag, AlertCircle, CheckCircle } from 'lucide-react';
+import { LanguageContext } from '../context/LanguageContext';
 
 export default function GrievanceBoard() {
   const { user } = useContext(AuthContext);
+  const { t, lang } = useContext(LanguageContext);
   const [grievances, setGrievances] = useState([]);
-  const [newComplaint, setNewComplaint] = useState({ platform: 'Uber', category: 'Payment', description: '' });
+  const [newComplaint, setNewComplaint] = useState({ platform: 'Uber', category: lang === 'ur' ? 'پیمنٹ کا مسئلہ' : 'Payment', description: '' });
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
 
@@ -55,8 +57,8 @@ export default function GrievanceBoard() {
     <div className="animate-fade-in">
         <header className="dashboard-header">
             <div>
-                <h1 className="header-title">Grievance Board</h1>
-                <p className="header-subtitle">Report platform issues and unite for fair treatment.</p>
+                <h1 className="header-title">{t.grievance.title}</h1>
+                <p className="header-subtitle">{t.grievance.subtitle}</p>
             </div>
         </header>
 
@@ -64,11 +66,11 @@ export default function GrievanceBoard() {
 
         <div className="grid-middle-row" style={{ gridTemplateColumns: '1fr 1.5fr' }}>
             <div className="chart-box">
-                <h3 className="chart-title">Post a Complaint</h3>
+                <h3 className="chart-title">{t.grievance.report_btn}</h3>
                 {user.role === 'worker' ? (
                     <form onSubmit={handleSubmit}>
                         <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Platform</label>
+                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>{t.common.platform}</label>
                             <select className="auth-input" value={newComplaint.platform} onChange={e => setNewComplaint({...newComplaint, platform: e.target.value})}>
                                 <option>Uber</option>
                                 <option>FoodPanda</option>
@@ -77,7 +79,7 @@ export default function GrievanceBoard() {
                             </select>
                         </div>
                         <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Category</label>
+                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>{t.grievance.category}</label>
                             <select className="auth-input" value={newComplaint.category} onChange={e => setNewComplaint({...newComplaint, category: e.target.value})}>
                                 <option>Payment Dispute</option>
                                 <option>Account Ban</option>
@@ -86,7 +88,7 @@ export default function GrievanceBoard() {
                             </select>
                         </div>
                         <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Description</label>
+                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>{t.grievance.desc}</label>
                             <textarea 
                                 className="auth-input" 
                                 rows="4" 
@@ -97,20 +99,20 @@ export default function GrievanceBoard() {
                             ></textarea>
                         </div>
                         <button type="submit" className="btn-download" style={{ width: '100%', justifyContent: 'center' }} disabled={loading}>
-                            <Send size={16} /> {loading ? 'Posting...' : 'Post Complaint'}
+                            <Send size={16} /> {loading ? (lang === 'ur' ? 'پوسٹ ہو رہا ہے...' : 'Posting...') : (lang === 'ur' ? 'شکایت جمع کریں' : 'Post Complaint')}
                         </button>
                     </form>
                 ) : (
                     <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
                         <AlertCircle size={32} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
-                        <p>Only Workers can file new grievances.</p>
-                        <p style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>Advocates manage and resolve existing complaints.</p>
+                        <p>{lang === 'ur' ? 'صرف ورکرز ہی شکایات درج کر سکتے ہیں۔' : 'Only Workers can file new grievances.'}</p>
+                        <p style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>{lang === 'ur' ? 'ایڈووکیٹ شکایات کا معائنہ کرتے ہیں۔' : 'Advocates manage and resolve existing complaints.'}</p>
                     </div>
                 )}
             </div>
 
             <div className="chart-box" style={{ overflowY: 'auto', maxHeight: '600px' }}>
-                <h3 className="chart-title">Recent Community Complaints</h3>
+                <h3 className="chart-title">{lang === 'ur' ? 'حالیہ شکایات' : 'Recent Community Complaints'}</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {grievances.map(g => (
                         <div key={g.id} style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
